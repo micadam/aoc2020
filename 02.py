@@ -27,4 +27,3 @@ if __name__ == "__main__":
         inp = list(map(lambda x: re.split("[- :]+", x), f.readlines()))
     print(f"part 1: {part1(inp)}")
     print(f"part 2: {part2(inp)}")
-
