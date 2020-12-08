@@ -30,7 +30,7 @@ def switch_between_jmp_and_nop(opcode):
 
 def simulate(inp):
     """Returns:
-    acc: value of acc once program terminates or repeats an
+    acc: value of acc once program terminates or repeats an instruction
     terminated: a boolean indicating whether it terminated
     """
     acc = 0
