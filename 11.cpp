@@ -31,13 +31,19 @@ bool in_bounds(int y, int x) {
     return x >= 0 && x < X && y >= 0 && y < Y;
 }
 
-int get_occupied_adjacent_simple(int y, int x, int current, bool stop_on_first) {
+int get_occupied_adjacent(int y, int x, int current, bool stop_on_first, bool part2) {
     int occupied_adjacent = 0;
     for(int i = 0; i < 8; i++) {
         int dy = directions[i].first;
         int dx = directions[i].second;
         int new_y = y + dy;
         int new_x = x + dx;
+        if (part2) {
+            while (in_bounds(new_y, new_x) && room[current][new_y][new_x] == FLOOR) {
+                new_y += dy;
+                new_x += dx;
+            }
+        }
         if (in_bounds(new_y, new_x) && room[current][new_y][new_x] == OCCUPIED) {
             ++occupied_adjacent;
             if (stop_on_first) {
@@ -48,26 +54,6 @@ int get_occupied_adjacent_simple(int y, int x, int current, bool stop_on_first) 
     return occupied_adjacent;
 }
 
-int get_occupied_adjacent_linear(int y, int x, int current, bool stop_on_first) {
-    int occupied_adjacent = 0;
-    for(int i = 0; i < 8; i++) {
-        int dy = directions[i].first;
-        int dx = directions[i].second;
-        int new_y = y + dy;
-        int new_x = x + dx;
-        while (in_bounds(new_y, new_x) && room[current][new_y][new_x] == FLOOR) {
-            new_y += dy;
-            new_x += dx;
-        }
-        if (in_bounds(new_y, new_x) && room[current][new_y][new_x] == OCCUPIED) {
-            ++occupied_adjacent;
-            if (stop_on_first) {
-                return 1;
-            }
-        }
-    }
-    return occupied_adjacent;
-}
 
 int do_simulation(bool part2 = false) {
     for (int y = 0; y < Y; y++) {
@@ -89,9 +75,7 @@ int do_simulation(bool part2 = false) {
                     continue;
                 }
                 bool stop_on_first = room[current][y][x] == EMPTY;
-                int occupied_adjacent = part2
-                    ? get_occupied_adjacent_linear(y, x, current, stop_on_first)
-                    : get_occupied_adjacent_simple(y, x, current, stop_on_first);
+                int occupied_adjacent = get_occupied_adjacent(y, x, current, stop_on_first, part2);
                 if (room[current][y][x] == EMPTY && occupied_adjacent == 0) {
                     room[next][y][x] = OCCUPIED;
                     active = true;
