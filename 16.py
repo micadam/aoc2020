@@ -35,7 +35,7 @@ class IntervalTree:
         for interval in intervals:
             mi = min(interval.left, mi)
             ma = max(interval.right, ma)
-        x_center = int((ma + mi) / 2)
+        x_center = (ma + mi) // 2
         s_left = []
         s_center = []
         s_right = []
@@ -72,10 +72,10 @@ class IntervalTree:
         return overlapping
 
     def _get_overlapping_in_center(self, x: int) -> List[Interval]:
-        """Find the number of overlapping intervals inside s_center.
-        when x <  x_center, this corresponds to binary searching for
+        """Find the overlapping intervals inside s_center.
+        when x <  x_center, this corresponds to (binary) searching for
             the largest left <= x
-        when x > x_center, this corresponds to binary searching for
+        when x > x_center, this corresponds to (binary) searching for
             the smallest right >= x
         """
         sorted_list = self.sorted_lefts if x < self.x_center \
@@ -85,27 +85,13 @@ class IntervalTree:
         mul = 1 if x < self.x_center else -1
 
         # This should be a binary search, pls fix Adam
+        # I mean it's fast anyway so what's the big deal am I right?
+        # Could be faster...
+        # But I got my 2 stars.
         for i in range(len(sorted_list)):
             if val(sorted_list[i]) > x * mul:
                 return sorted_list[:i].copy()
         return sorted_list.copy()
-
-        """This is the binary search that doesn't work and I'm too lazy to fix
-        lo = 0
-        hi = len(sorted_list)
-        idx = 0
-        while lo < hi:
-            idx = (lo + hi) // 2
-            if x_to_find < sorted_list[idx]:
-                if idx == 0:
-                    return idx
-                hi = idx
-            else:
-                if idx == len(sorted_list) - 1:
-                    return idx
-                lo = idx
-        return idx + 1
-        """
 
 
 def get_ticket_invalidness(ticket: Ticket, tree: IntervalTree) -> int:
@@ -114,7 +100,7 @@ def get_ticket_invalidness(ticket: Ticket, tree: IntervalTree) -> int:
     for value in ticket.data:
         if len(tree.get_intervals_overlapping(value)) == 0:
             return value
-    return 0
+    return "valid"
 
 
 def get_input():
@@ -139,26 +125,39 @@ def part1(inp):
     tree = IntervalTree(intervals)
     ans = 0
     for other_ticket in other_tickets:
-        ans += get_ticket_invalidness(other_ticket, tree)
+        invalidness = get_ticket_invalidness(other_ticket, tree)
+        ans += invalidness if invalidness != "valid" else 0
     return ans
 
 
 def part2(inp):
     intervals, my_ticket, other_tickets = inp
     all_field_names = set(i.field for i in intervals)
-    num_fields = len(my_ticket.data)
+    num_fields = len(all_field_names)
     tree = IntervalTree(intervals)
-    possibilities = {i: all_field_names.copy() for i in range(num_fields)}
-    # print(possibilities)
+    possibilities = {i: all_field_names for i in range(num_fields)}
     for j, other_ticket in enumerate(other_tickets):
-        print(f"{j + 1}/{len(other_tickets)}")
-        if get_ticket_invalidness(other_ticket, tree) > 0:
+        if get_ticket_invalidness(other_ticket, tree) != "valid":
             continue
         for i, val in enumerate(other_ticket.data):
             possibilities_here = set(i.field for i in tree.get_intervals_overlapping(val))
-            # print(possibilities_here)
             possibilities[i] = possibilities[i].intersection(possibilities_here)
-    print(sorted(possibilities.items(), key=lambda item: len(item[1])))
+    used_fields = set()
+    fields_dictionary = {}
+    sorted_indices = sorted(possibilities.items(), key=lambda item: len(item[1]))
+    for i, possibilities_field in sorted_indices:
+        actual_possibilities = possibilities_field.difference(used_fields)
+        if len(actual_possibilities) > 1:
+            # If this happens then I'm pretty sure there's multiple solutions?
+            print("bad")
+        field_name = actual_possibilities.pop()
+        used_fields.add(field_name)
+        fields_dictionary[field_name] = i
+    relevant_fields = [my_ticket.data[v] for k, v in fields_dictionary.items() if k.startswith("departure")]
+    ans = 1
+    for val in relevant_fields:
+        ans *= val
+    return ans
 
 
 if __name__ == "__main__":
