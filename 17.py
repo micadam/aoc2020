@@ -18,6 +18,7 @@ def get_input():
 
 
 def simulate(inp, num_dimensions):
+    cached_neighbours = {}
     dirs_with_zero = get_dirs_with_zero(num_dimensions)
     dirs = [di for di in dirs_with_zero if sum(abs(dii) for dii in di) != 0]
     active_fields = set()
@@ -31,9 +32,13 @@ def simulate(inp, num_dimensions):
                                   for field in active_fields for di in dirs_with_zero])
         new_active_fields = set()
         for field in fields_to_consider:
+            if field in cached_neighbours:
+                neighbours = cached_neighbours[field]
+            else:
+                neighbours = [elementwise_add_tuples(field, di) for di in dirs]
+                cached_neighbours[field] = neighbours
             active_neighbour_count = 0
-            for di in dirs:
-                new_field = elementwise_add_tuples(field, di)
+            for new_field in neighbours:
                 if new_field in active_fields:
                     active_neighbour_count += 1
                 if active_neighbour_count > 3:
